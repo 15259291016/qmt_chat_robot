@@ -190,9 +190,9 @@ export class MessageHandler {
     // }
     let helpMessage = '可用命令：\n'
     this.TASKS.forEach((task) => {
-      if (task.skip) {
-        return
-      }
+      // if (task.skip) {
+        // return
+      // }
       helpMessage += `[${task.keyword.join(' | ')}] - ${task.description}\n`
     })
 

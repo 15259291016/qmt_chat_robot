@@ -27,7 +27,7 @@ export async function defaultMessage(msg, bot, ServiceType = 'GPT') {
   const remarkName = await contact.alias() // 备注名称
   const name = await contact.name() // 微信名称
   const isText = msg.type() === bot.Message.Type.Text // 消息类型是否为文本
-  const isRoom = (roomWhiteList.includes(roomName) || roomWhiteList.includes('*')) && content.includes(`@${botName}`) // 是否在群聊白名单内并且艾特了机器人
+  const isRoom = roomWhiteList.includes(roomName) || roomWhiteList.includes('*') && content.includes(`@${botName}`) // 是否在群聊白名单内并且艾特了机器人
   const isAlias = aliasWhiteList.includes(remarkName) || aliasWhiteList.includes(name) || aliasWhiteList.includes('*') // 发消息的人是否在联系人白名单内
   const isBotSelf = botName === remarkName || botName === name // 是否是机器人自己
   const privateChat = !room
@@ -76,21 +76,25 @@ export async function defaultMessage(msg, bot, ServiceType = 'GPT') {
 
     try {
       // 群聊
-      if (isRoom && room) {
-        // 在群聊中回复消息
-        // 如果是群聊但不是指定艾特人那么就不进行发送消息
-        if (content.indexOf(`${botName}`) !== -1) {
-          if (handler.isIncludesKeyword(content.replace(`@${botName}`, '').replace(" ",""))) {
-            const content = msg.text().replace(`@${botName}`, '').replace(" ", "")
-            handler.handleMessage(msg,isRoom);
-          }else{
-            try {
-              await room.say(await getReply(content.replace(`@${botName}`, '')))
-            } catch (error) {
-              await room.say('猪脑过载了,请等一会再互动')
+      if (isRoom) {
+        
+        if(room){
+          // 在群聊中回复消息
+          // 如果是群聊但不是指定艾特人那么就不进行发送消息
+          if (content.indexOf(`${botName}`) !== -1) {
+            if (handler.isIncludesKeyword(content.replace(`@${botName}`, '').replace(" ",""))) {
+              const content = msg.text().replace(`@${botName}`, '').replace(" ", "")
+              handler.handleMessage(msg,isRoom);
+            }else{
+              try {
+                await room.say(await getReply(content.replace(`@${botName}`, '')))
+              } catch (error) {
+                await room.say('猪脑过载了,请等一会再互动')
+              }
             }
           }
         }
+        
       }
     } catch (e) {
       console.error(e)
