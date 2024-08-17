@@ -1,13 +1,12 @@
 import { remark } from 'remark'
 import stripMarkdown from 'strip-markdown'
-import { Configuration, OpenAIApi } from 'openai'
+import OpenAI from 'openai'
 import dotenv from 'dotenv'
 const env = dotenv.config().parsed // 环境参数
 
-const configuration = new Configuration({
-  apiKey: env.OPENAI_API_KEY,
-})
-const openai = new OpenAIApi(configuration)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function getGptReply(prompt) {
   console.log('🚀🚀🚀 / prompt', prompt)
