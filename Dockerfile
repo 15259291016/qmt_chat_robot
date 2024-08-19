@@ -13,6 +13,8 @@ COPY . .
 RUN npm install -g pm2
 
 # 安装依赖
+RUN npm install --ignore-scripts puppeteer
+
 RUN npm install
 
 # 使用 PM2 启动应用

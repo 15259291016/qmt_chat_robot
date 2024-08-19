@@ -32,13 +32,13 @@ export async function defaultMessage(msg, bot, ServiceType = 'GPT') {
   const isBotSelf = botName === remarkName || botName === name // 是否是机器人自己
   const privateChat = !room
   const handler = new MessageHandler(bot)
-  //console.log('接收到消息类型：', bot.Message.Type[msg.type()]);
+  console.log('接收到消息类型：', bot.Message.Type[msg.type()]);
 
   // 如果消息类型为文本且不是机器人自己发送的消息
 
   // console.log(msg.type());
   if (isText && !isBotSelf) {
-    console.log(JSON.stringify(msg))
+    // console.log(JSON.stringify(msg))
 
     // 检查消息时间戳，如果距离现在超过10秒则不处理
     // const messageTimestamp = 1000 * msg.payload.timestamp
@@ -77,7 +77,6 @@ export async function defaultMessage(msg, bot, ServiceType = 'GPT') {
     try {
       // 群聊
       if (isRoom) {
-        
         if(room){
           // 在群聊中回复消息
           // 如果是群聊但不是指定艾特人那么就不进行发送消息

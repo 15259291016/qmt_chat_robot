@@ -22,9 +22,9 @@ function onScan(qrcode, status) {
 
 // 登录
 function onLogin(user) {
-  console.log(`User ${user} logged in`)
+  console.log(`用户 ${user} 登录`)
   const date = new Date()
-  console.log(`Current time: ${date}`)
+  console.log(`当前时间: ${date}`)
   console.log(`Auto chatbot mode activated`)
 
   // 加载任务
@@ -36,7 +36,7 @@ function onLogin(user) {
 
 // 登出
 function onLogout(user) {
-  console.log(`${user} has logged out`)
+  console.log(`${user} 下线`)
 }
 
 // 收到好友请求
@@ -47,6 +47,18 @@ async function onFriendShip(friendship) {
       await friendship.accept()
     }
   }
+}
+
+// 收到有人加群请求
+async function onRoomJoin(room, inviteeList, inviter) {  
+  const nameList = inviteeList.map(c => c.name()).join(',')  
+  console.log(`Room ${room.topic()} got new member ${nameList}, invited by ${inviter}`)
+}
+
+// 收到有人退群请求
+async function onRoomLeave(room, leaverList) {  
+  const nameList = leaverList.map(c => c.name()).join(',')  
+  console.log(`Room ${room.topic()} lost member ${nameList}`)
 }
 
 /**
@@ -94,6 +106,10 @@ bot.on('message', onMessage)
 bot.on('friendship', onFriendShip)
 // 收到入群邀请
 bot.on('room-invite', invitation => console.log('收到入群邀请：' + invitation))      
+// 有人加群
+bot.on('room-join', onRoomJoin)      
+// 有人退群
+bot.on('room-topic', onRoomLeave)
 // 错误
 bot.on('error', (e) => console.error('bot error❌: ', e))
 // 启动微信机器人
