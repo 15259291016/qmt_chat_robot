@@ -155,10 +155,12 @@ function init() {
   inquirer
     .prompt(questions)
     .then((res) => {
-      handleStart(res.serviceType)
+      // handleStart(res.serviceType)
+      handleStart('Kimi')
     })
     .catch((error) => {
       console.log('🚀error:', error)
     })
 }
-init()
+// init()
+handleStart('Kimi')
