@@ -87,7 +87,8 @@ export async function fetchFabingData(name) {
 // 推送股票
 export async function fetchTSGP() {
   const url = "http://127.0.0.1:8000/tsgp";
-  return await request.get(url);
+  const res = await request.get(url);
+  return res;
 }
 
 // 删除股票

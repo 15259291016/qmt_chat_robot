@@ -303,18 +303,53 @@ export class MessageHandler {
   ]
 
   async handleTSGP(msg) {
+
+    function getStockExchanges(stockCodes) {
+      const result = [];
+  
+      stockCodes.forEach(code => {
+          if (code.startsWith('60')) {
+              result.push(0);  //上海证券交易所 (上交所)
+          } else if (code.startsWith('00')) {
+              result.push(0);    //'深圳证券交易所 (深交所) 主板'
+          } else if (code.startsWith('300')) {
+              result.push(1);    //深圳证券交易所 (深交所) 创业板
+          } else if (code.startsWith('8')) {
+              result.push(2);     //北京证券交易所 (北交所)
+          } else {
+              result.push(-1);
+          }
+      });
+  
+      return result;
+    }
+  
     try {
         const content = msg.text()
         const {parameters} = parseCommand(content)
+        let txt0 = '===========上交所===========\n';
+        let txt1 = '\n\n\n===========深交所===========';
+        let txt2 = '\n\n\n===========创业板===========';
+        let txt3 = '===========北交所===========\n';
         let name = parameters[0];
         if (!name) {
             const contact = msg.talker() // 发消息人
             name = await contact.name() // 发消息人昵称
         }
         const {data} = await fetchTSGP()
-        if (data) {
-          await msg.say(FileBox.fromUrl(data))
+        const exchanges = getStockExchanges(Object.values(data["股票代码"]).map(code => code.split('.')[0]));
+        for(let i=0;i<Object.values(data["股票简称"]).length;i++){
+          if(exchanges[i]==0){
+            txt0 +="股票简称: " + data["股票简称"][i] + ',股票代码: ' + data["股票代码"][i] + '\n'
+          }else if(exchanges[i]==1){
+            txt1 +="股票简称: " + data["股票简称"][i] + ',股票代码: ' + data["股票代码"][i] + '\n'
+          }else if (exchanges[i]==2) {
+            txt2 +="股票简称: " + data["股票简称"][i] + ',股票代码: ' + data["股票代码"][i] + '\n'
+          }else{
+            txt3 +="股票简称: " + data["股票简称"][i] + ',股票代码: ' + data["股票代码"][i] + '\n'
+          }
         }
+        await msg.say((txt0+txt1+txt2+txt3).slice(0,-1))
     } catch (error) {
         console.error('Error sending random girl video message:', error)
         await msg.say("推送失败")
