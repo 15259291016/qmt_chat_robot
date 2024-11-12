@@ -2,8 +2,8 @@ import { FileBox } from 'file-box'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-// import { fileURLToPath } from 'url'
-// import { dirname, join } from 'path'
+import path from 'path'
+import { encrypt } from '../utils/index.js'
 import {
   fetchMoyuData,
   fetchSixsData,
@@ -196,7 +196,8 @@ export class MessageHandler {
       helpMessage += `[${task.keyword.join(' | ')}] - ${task.description}\n`
     })
 
-    await msg.say(helpMessage)
+    // await msg.say(helpMessage)
+    await msg.say('你好')
   }
 
   async handleUnknown(msg) {
@@ -457,6 +458,7 @@ export class MessageHandler {
           console.error('Error sending random girl video message:', error)
       }
   }
+
   async handleSlVideo(msg) {
     try {
       const res = await getRedirectUrl(endpointsMap.get('sl'))
@@ -603,6 +605,247 @@ export class MessageHandler {
       }
       await this.handleUnknown(msg)
     }
+  }
+
+  async handleExportVideo(token, msg) { 
+    var imgList = [];
+    var jsonData = {};
+    //获取用户token
+    jsonData.token = token;
+    let urlInput = msg.text()
+    //提取文本中的URL链接
+    var regex = /(http[s]?:\/\/[^\s,，]+)/g;
+    var matches = urlInput.match(regex);
+    if (matches) {
+        urlInput = matches[0];
+    } else {
+        // $("#inputPrompt").html('解析失败，请重试并检查链接是否有效&emsp;查看&nbsp;<a href="https://www.xiazaitool.com/jiaocheng" target="_blank">使用教程</a>&nbsp;或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>').show();
+        $("#downloadButton").prop('disabled', false);
+
+        var dynamicContent = '解析失败，请重试并检查链接是否有效&emsp;查看&nbsp;<a href="https://www.xiazaitool.com/jiaocheng" target="_blank">使用教程</a>&nbsp;或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>';
+        showButtonModel(dynamicContent);
+        return;
+    }
+
+    jsonData.url = urlInput;
+
+    //请求后缀
+    const suffix = "video/parseVideoUrl";
+
+    if (urlInput.indexOf(".bilibili.com") !== -1 || urlInput.indexOf("b23.tv") !== -1) {
+        jsonData.platform = "bilibili";
+        // suffix = "blbl/parse";
+        // var newButton = $('<button id="downloadHdLink" class="btn btn-success ms-1 me-1 mt-2">下载高清</button>');
+        // $("#downloadLink").text("下载标清").before(newButton);
+        // $("#inputPrompt").text("bilibili视频解析正在修复，给您带来不便，非常抱歉！").show();
+        // return;
+
+
+
+    } else if (urlInput.indexOf("douyin.com") !== -1) {
+
+        // 提取抖音分享链接
+        // var regex = /(https:\/\/www\.douyin\.com\/video\/\d+)|(https:\/\/v\.douyin\.com\/[a-zA-Z0-9]+\/)/g;
+        // urlInput = urlInput.match(regex)[0];
+        jsonData.platform = "douyin";
+        if (urlInput.indexOf("douyin.com/search") !== -1) {
+            var dynamicContent = '暂不支持抖音搜索链接下载，请重新输入！';
+            showButtonModel(dynamicContent);
+            return;
+        }
+    } else if (urlInput.indexOf("kuaishou.com") !== -1) {
+        jsonData.platform = "kuaishou";
+    } else if (urlInput.indexOf("pipix.com") !== -1) {
+        jsonData.platform = "pipix";
+    } else if (urlInput.indexOf("www.xiaohongshu.com") !== -1 || urlInput.indexOf("xhslink.com") !== -1) {
+        jsonData.platform = "xhs";
+    } else if (urlInput.indexOf("tiktok.com") !== -1) {
+        jsonData.platform = "tiktok";
+    } else if (urlInput.indexOf("ixigua.com") !== -1) {
+        jsonData.platform = "xigua";
+    }  else if (urlInput.indexOf("weishi.qq.com") !== -1) {
+        jsonData.platform = "weishi";
+    } else if (urlInput.indexOf("weibo.com") !== -1) {
+        jsonData.platform = "weibo";
+    } else if (urlInput.indexOf("jd.com") !== -1 || urlInput.indexOf("3.cn") !== -1) {
+        jsonData.platform = "jingdong";
+    }  else if (urlInput.indexOf("youtu.be") !== -1 || urlInput.indexOf("youtube.com") !== -1) {
+        jsonData.platform = "youtube";
+    } else if (urlInput.indexOf("hao123.com") !== -1 || urlInput.indexOf("haokan.baidu.com") !== -1) {
+        jsonData.platform = "haokan";
+    } else {
+        // $("#inputPrompt").html('解析失败，请重试并检查链接是否有效&emsp;查看&nbsp;<a href="https://www.xiazaitool.com/jiaocheng" target="_blank">使用教程</a>&nbsp;或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>').show();
+        //解除重新解析按钮限制
+        $("#downloadButton").prop('disabled', false);
+        $("#waitAnimation").hide();
+
+        var dynamicContent = '解析失败，请重试并检查链接是否有效&emsp;查看&nbsp;<a href="https://www.xiazaitool.com/jiaocheng" target="_blank">使用教程</a>&nbsp;或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>';
+        showButtonModel(dynamicContent);
+        return;
+    }
+
+    var params = JSON.stringify(jsonData);
+
+    var encryptParams = encrypt(params);
+    jsonData.params= encryptParams;
+
+    // 发起 POST 请求
+    axios.post('https://www.xiazaitool.com/' + suffix, JSON.stringify(jsonData), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+        'timestam': new Date().getTime()
+      }
+    })
+    .then(res => {
+      const dataObject = res.data;
+
+      if (res.status !== 200) {
+        if (response.status === 500 || response.status === 407) {
+
+          let message = response.data.message;
+          if ($.trim(message).length !== 0) {
+            if (response.status === 407) {
+              let buttonTwo = '<a href="https://www.xiazaitool.com/openmember" target="_blank"><button type="button" class="btn btn-success">去开通</button></a>';
+            } else {
+              let buttonTwo = '<button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>';
+            }
+            showModel(message, buttonTwo);
+          } else {
+            let dynamicContent = '解析失败，请重试并检查链接是否有效&emsp;查看&nbsp;<a href="https://www.xiazaitool.com/jiaocheng" target="_blank">使用教程</a>&nbsp;或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>';
+            showButtonModel(dynamicContent);
+          }
+          $("#waitAnimation").hide();
+          return;
+        } else if (response.status === 748) {
+          // 调用验证码
+        } else {
+          let dynamicContent = '未知错误，请重试，或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>';
+          showButtonModel(dynamicContent);
+        }
+      }
+      imgList = dataObject.data.voideDeatilVoList;
+      if(dataObject.data.title != null){
+        msg.say(dataObject.data.title) // 向群聊发送title
+      }
+      try {
+        const urls = dataObject.data.voideDeatilVoList
+        const __dirname = path.dirname(fileURLToPath(import.meta.url))
+        const promises = urls.map(async (url, index) => {
+          try {
+            if (url.type=='video') {
+              try {
+                    const response = await axios({
+                      url: url.url,
+                      method: 'GET',
+                      responseType: 'stream' // 确保 responseType 是 'stream'
+                    })
+        
+                    console.log(`响应状态码: ${response.status} for URL: ${url}`); // 输出响应状态码
+                    console.log(`响应头: ${JSON.stringify(response.headers)} for URL: ${url}`); // 输出响应头
+        
+                    if (!response.data) {
+                      throw new Error(`响应数据为空 for URL: ${url}`);
+                    }
+        
+                    const filePath = path.join(__dirname, `temp_video_${index + 1}.mp4`)
+                    const writer = fs.createWriteStream(filePath)
+                    response.data.pipe(writer)
+        
+                    return new Promise((resolve, reject) => {
+                      writer.on('finish', async () => {
+                        const fileBox = FileBox.fromFile(filePath)
+                        await msg.say(fileBox) // 向群聊发送视频
+                        fs.unlinkSync(filePath) // 删除临时文件
+                        resolve()
+                      })
+        
+                      writer.on('error', reject)
+                    })
+              } catch (error) {
+                console.error('处理视频列表失败:', error)
+              }
+            }else{
+              const response = await axios({
+                url: url.url,
+                method: 'GET',
+                responseType: 'stream' // 确保 responseType 是 'stream'
+              })
+  
+              console.log(`响应状态码: ${response.status} for URL: ${url}`); // 输出响应状态码
+              console.log(`响应头: ${JSON.stringify(response.headers)} for URL: ${url}`); // 输出响应头
+  
+              if (!response.data) {
+                throw new Error(`响应数据为空 for URL: ${url}`);
+              }
+  
+              const filePath = path.join(__dirname, `temp_image_${index + 1}.jpg`)
+              const writer = fs.createWriteStream(filePath)
+              response.data.pipe(writer)
+  
+              return new Promise((resolve, reject) => {
+                writer.on('finish', async () => {
+                  const fileBox = FileBox.fromFile(filePath)
+                  await msg.say(fileBox) // 向群聊发送图片
+                  fs.unlinkSync(filePath) // 删除临时文件
+                  resolve()
+                })
+                // writer.on('error', reject)
+              })
+            }
+          } catch (error) {
+            console.error(`下载图片失败 for URL: ${url}`, error)
+            throw error
+          }
+        })
+
+        Promise.all(promises)
+      } catch (error) {
+        console.error('处理图片列表失败:', error)
+      }
+      // for (let index = 0; index < imgList.length; index++) {
+      //   const element = imgList[index].url;
+      //   try {
+      //     // 下载图片
+      //     const response = axios({
+      //       url: element,
+      //       method: 'GET',
+      //       responseType: 'stream' // 确保 responseType 是 'stream'
+      //     })
+
+      //     if (!response.data) {
+      //       throw new Error('响应数据为空');
+      //     }
+      //     // 获取当前文件的目录路径
+      //     const __dirname = path.dirname(fileURLToPath(import.meta.url))
+      //     const filePath = path.join(__dirname, 'temp_image'+index+'.jpg')
+      //     const writer = fs.createWriteStream(filePath)
+      //     response.data.pipe(writer)
+  
+      //     new Promise((resolve, reject) => {
+      //       writer.on('finish', async () => {
+      //         const fileBox = FileBox.fromFile(filePath)
+      //         await room.say(fileBox) // 向群聊发送图片
+      //         fs.unlinkSync(filePath) // 删除临时文件
+      //         resolve()
+      //       })
+  
+      //       writer.on('error', reject)
+      //     })
+      //   } catch (error) {
+      //     console.error('下载图片失败:', error)
+      //   }
+      // }
+    })
+    .catch(error => {
+      if (error.response && error.response.status === 406) {
+        alert("请求太过频繁，请稍后重试");
+      }
+      // 失败提示
+      let dynamicContent = '解析失败，请重试并检查链接是否有效&emsp;查看&nbsp;<a href="https://www.xiazaitool.com/jiaocheng" target="_blank">使用教程</a>&nbsp;或&nbsp;<a href="https://www.xiazaitool.com/fankui" target="_blank">联系我们</a>';
+      // 解析完成，允许点击重新解析按钮
+      console.log("发生错误:", error);
+    });
   }
 
   isIncludesKeyword(content) {

@@ -1,9 +1,14 @@
 import dotenv from 'dotenv'
-
+import { FileBox } from 'file-box'
+import axios from 'axios'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
 import { getSparkAiReply as getReply } from '../spark/index.js'
 import { MessageHandler } from './messageHandler.js'
 import { parseCommand } from '../utils/index.js'
 import { getServe } from './serve.js'
+
 const env = dotenv.config().parsed
 const botName = env.BOT_NAME
 const roomWhiteList = env.ROOM_WHITE_LIST.split(',')
@@ -80,7 +85,7 @@ export async function defaultMessage(msg, bot, ServiceType = 'GPT') {
         if(room){
           // 在群聊中回复消息
           // 如果是群聊但不是指定艾特人那么就不进行发送消息
-          if (content.indexOf(`${botName}`) !== -1) {
+          if (content.indexOf(`${botName}`) !== -1 && !content.includes(`- - - - - - - - - - - - - - -`)) {
             if (handler.isIncludesKeyword(content.replace(`@${botName}`, '').replace(" ",""))) {
               const content = msg.text().replace(`@${botName}`, '').replace(" ", "")
               handler.handleMessage(msg,isRoom);
@@ -91,9 +96,16 @@ export async function defaultMessage(msg, bot, ServiceType = 'GPT') {
                 await room.say('猪脑过载了,请等一会再互动')
               }
             }
+          }else if(msg.text().includes('打开') || msg.text().includes('-哔哩哔哩】')){
+            // https://www.xiazaitool.com/dy    19026045487
+            const token = 'c707f281a42d908bd4eb46f58fed205e'
+            const contact = msg.talker() // 发消息人
+            const name = contact.name() // 发消息人昵称
+            msg.say(`本群分享之星 @${await contact.alias() || contact.name()} 大家来看分享内容`)
+            handler.handleExportVideo(token,msg);
+            return
           }
         }
-        
       }
     } catch (e) {
       console.error(e)

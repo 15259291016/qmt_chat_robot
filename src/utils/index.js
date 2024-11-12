@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { exec } from 'child_process';
+import CryptoJS from 'crypto-js'
 
 export async function getRedirectUrl(url, maxRedirects = 5) {
   try {
@@ -75,4 +76,18 @@ export function parseCommand(command) {
       // 如果命令为空，返回空对象
       return { instruction: "", parameters: [] };
   }
+}
+
+export function encrypt(str) {
+  //密钥--应和后台java解密或是前台js解密的密钥保持一致（16进制）
+  var key = CryptoJS.enc.Utf8.parse("aLr8011v82deTFQwCZd1wCcD");
+  //偏移量
+  var srcs = CryptoJS.enc.Utf8.parse(str);
+  //算法
+  var encrypted = CryptoJS.AES.encrypt(srcs, key, { mode : CryptoJS.mode.ECB ,
+      padding : CryptoJS.pad.Pkcs7
+  });
+  //替换--防止值为“1”的情况
+  var reg = new RegExp('/', "g");
+  return encrypted.toString().replace(reg, "#");
 }
